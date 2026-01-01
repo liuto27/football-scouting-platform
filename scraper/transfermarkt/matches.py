@@ -13,8 +13,8 @@ def scrape_player_match_stats(profile_url):
         return []
 
     stats_url = (
-        f"https://www.transfermarkt.com/leistungsdatendetails/spieler/{player_id}"
-        f"/saison/0/verein/0/liga/0/wettbewerb/0/pos/0/trainer_id/0/plus/1"
+        f"https://www.transfermarkt.com/{player_id}/leistungsdatendetails/spieler/{player_id}"
+        f"/verein/0/liga/0/wettbewerb/IT2/pos/0/trainer_id/0"
     )
 
     playwright, browser, context, page = get_browser()
@@ -25,50 +25,61 @@ def scrape_player_match_stats(profile_url):
 
     try:
         page.wait_for_selector("table.items", timeout=20000)
-        rows = page.query_selector_all("table.items tbody tr")
+        rows = page.query_selector_all("div.responsive-table table tbody tr")
 
         for row in rows:
+            counter = 0
             try:
                 # Skip header rows
                 if "bg_blau_20" in (row.get_attribute("class") or ""):
                     continue
 
-                date_el = row.query_selector("td:nth-child(2)")
-                date = date_el.inner_text().strip() if date_el else None
+                # Check if 5th td has a span
+                opponent_td = row.query_selector("td:nth-child(5)")
+                span = opponent_td.query_selector("span") if opponent_td else None
+                if span is not None:
+                    counter += 1
 
-                competition_el = row.query_selector("td:nth-child(3) a")
-                competition = competition_el.inner_text().strip() if competition_el else None
-
-                opponent_el = row.query_selector("td:nth-child(5) a")
-                opponent = opponent_el.inner_text().strip() if opponent_el else None
-
-                result_el = row.query_selector("td:nth-child(6) a")
-                result = result_el.inner_text().strip() if result_el else None
-
-                minutes_el = row.query_selector("td:nth-child(8)")
+                minutes_el = row.query_selector(f"td:nth-child({14+counter})")
                 minutes = minutes_el.inner_text().strip() if minutes_el else None
 
-                goals_el = row.query_selector("td:nth-child(9)")
+                # stop if minutes is None, as the player hasn't played
+                if minutes is None:
+                    continue
+
+                goals_el = row.query_selector(f"td:nth-child({9+counter})")
                 goals = goals_el.inner_text().strip() if goals_el else None
 
-                assists_el = row.query_selector("td:nth-child(10)")
+                assists_el = row.query_selector(f"td:nth-child({10+counter})")
                 assists = assists_el.inner_text().strip() if assists_el else None
 
-                yellow_el = row.query_selector("td:nth-child(11)")
-                yellow = yellow_el.inner_text().strip() if yellow_el else None
+                yellow_el = row.query_selector(f"td:nth-child({11 + counter})")
+                yellow = False
+                if yellow_el:
+                    text = yellow_el.inner_text().strip()
+                    if text not in ("", "-", None):
+                        yellow = True
 
-                red_el = row.query_selector("td:nth-child(12)")
-                red = red_el.inner_text().strip() if red_el else None
+                second_yellow_el = row.query_selector(f"td:nth-child({12+counter})")
+                second_yellow = False
+                if second_yellow_el:
+                    text = second_yellow_el.inner_text().strip()
+                    if text not in ("", "-", None):
+                        second_yellow = True
+
+                red_el = row.query_selector(f"td:nth-child({13+counter})")
+                red = False
+                if red_el:
+                    text = red_el.inner_text().strip()
+                    if text not in ("", "-", None):
+                        red = True
 
                 matches.append({
-                    "date": date,
-                    "competition": competition,
-                    "opponent": opponent,
-                    "result": result,
                     "minutes": minutes,
                     "goals": goals,
                     "assists": assists,
                     "yellow": yellow,
+                    "second_yellow": second_yellow,
                     "red": red
                 })
 
