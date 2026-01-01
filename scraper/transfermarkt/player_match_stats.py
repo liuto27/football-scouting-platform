@@ -21,7 +21,7 @@ def scrape_player_match_stats(profile_url):
     print(f"Scraping match stats: {stats_url}")
     page.goto(stats_url, timeout=60000)
 
-    matches = []
+    player_match = []
 
     try:
         page.wait_for_selector("table.items", timeout=20000)
@@ -46,6 +46,13 @@ def scrape_player_match_stats(profile_url):
                 # stop if minutes is None, as the player hasn't played
                 if minutes is None:
                     continue
+
+                link = row.query_selector(f"td:nth-child({7 + counter}) a")
+                if not link:
+                    continue
+                match_url = "https://www.transfermarkt.com" + link.get_attribute("href")
+
+
 
                 goals_el = row.query_selector(f"td:nth-child({9+counter})")
                 goals = goals_el.inner_text().strip() if goals_el else None
@@ -74,8 +81,9 @@ def scrape_player_match_stats(profile_url):
                     if text not in ("", "-", None):
                         red = True
 
-                matches.append({
+                player_match.append({
                     "minutes": minutes,
+                    "match_url": match_url,
                     "goals": goals,
                     "assists": assists,
                     "yellow": yellow,
@@ -92,4 +100,4 @@ def scrape_player_match_stats(profile_url):
     browser.close()
     playwright.stop()
 
-    return matches
+    return player_match

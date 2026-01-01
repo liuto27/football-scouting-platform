@@ -1,5 +1,5 @@
 from transfermarkt.players import scrape_players_from_team
-from transfermarkt.matches import scrape_player_match_stats
+from transfermarkt.player_match_stats import scrape_player_match_stats
 
 team_url = "https://www.transfermarkt.com/venezia-fc/startseite/verein/607/saison_id/2025"
 
