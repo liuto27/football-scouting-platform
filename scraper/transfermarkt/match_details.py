@@ -46,16 +46,16 @@ def scrape_match_details(match_url):
 
         # Competition
         comp_el = page.query_selector(".direct-headline a")
-        competition = comp_el.inner_text().strip() if comp_el else None
+        league = comp_el.inner_text().strip() if comp_el else None
 
         match_data = {
-            "match_id": match_id,
+            "id": match_id,
             "date": date,
             "home_team": home_team,
             "away_team": away_team,
             "home_goals": home_goals,
             "away_goals": away_goals,
-            "competition": competition,
+            "league": league,
             "match_url": match_url
         }
 

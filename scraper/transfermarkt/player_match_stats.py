@@ -1,9 +1,20 @@
 import re
 from scraper.playwright_driver import get_browser
 
+
 def extract_player_id(profile_url):
-    match = re.search(r"/spieler/(\d+)", profile_url)
+    profile = re.search(r"/spieler/(\d+)", profile_url)
+    return profile.group(1) if profile else None
+
+
+def extract_match_id(match_url):
+    match = re.search(r"/spielbericht/(\d+)", match_url)
     return match.group(1) if match else None
+
+
+def extract_team_id(team_url):
+    team = re.search(r"/verein/(\d+)", team_url)
+    return team.group(1) if team else None
 
 
 def scrape_player_match_stats(profile_url):
@@ -34,6 +45,11 @@ def scrape_player_match_stats(profile_url):
                 if "bg_blau_20" in (row.get_attribute("class") or ""):
                     continue
 
+                team_td = row.query_selector("td:nth-child(4)")
+                team_url = "https://www.transfermarkt.com" + team_td.get_attribute("href")
+                team_id = extract_team_id(team_url)
+
+
                 # Check if 5th td has a span
                 opponent_td = row.query_selector("td:nth-child(5)")
                 span = opponent_td.query_selector("span") if opponent_td else None
@@ -51,8 +67,7 @@ def scrape_player_match_stats(profile_url):
                 if not link:
                     continue
                 match_url = "https://www.transfermarkt.com" + link.get_attribute("href")
-
-
+                match_id = extract_match_id(match_url)
 
                 goals_el = row.query_selector(f"td:nth-child({9+counter})")
                 goals = goals_el.inner_text().strip() if goals_el else None
@@ -82,8 +97,11 @@ def scrape_player_match_stats(profile_url):
                         red = True
 
                 player_match.append({
+                    "player_id": player_id,
                     "minutes": minutes,
+                    "match_id": match_id,
                     "match_url": match_url,
+                    "team_id": team_id,
                     "goals": goals,
                     "assists": assists,
                     "yellow": yellow,
