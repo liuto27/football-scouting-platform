@@ -35,13 +35,16 @@ def scrape_teams_from_league(league_url):
                     continue
 
                 team_name = link.inner_text().strip()
-                team_url = link.get_attribute("href")
+                team_url = "https://www.transfermarkt.com" + link.get_attribute("href")
                 team_id = extract_team_id(team_url)
+                # Avoid second table in the webpage
+                if not team_name or not team_id:
+                    continue
 
                 teams.append({
                     "id": team_id,
                     "name": team_name,
-                    "team_url": team_url,
+                    "url": team_url,
                     "league_url": league_url,
                     "league_id": league_id
                 })

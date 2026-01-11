@@ -45,7 +45,7 @@ def scrape_player_match_stats(profile_url):
                 if "bg_blau_20" in (row.get_attribute("class") or ""):
                     continue
 
-                team_td = row.query_selector("td:nth-child(4)")
+                team_td = row.query_selector("td:nth-child(4) a")
                 team_url = "https://www.transfermarkt.com" + team_td.get_attribute("href")
                 team_id = extract_team_id(team_url)
 
@@ -58,6 +58,7 @@ def scrape_player_match_stats(profile_url):
 
                 minutes_el = row.query_selector(f"td:nth-child({14+counter})")
                 minutes = minutes_el.inner_text().strip() if minutes_el else None
+                minutes = int(re.sub("[^0-9]", "", minutes)) if len(minutes) > 0 else 0
 
                 # stop if minutes is None, as the player hasn't played
                 if minutes is None:
@@ -71,9 +72,11 @@ def scrape_player_match_stats(profile_url):
 
                 goals_el = row.query_selector(f"td:nth-child({9+counter})")
                 goals = goals_el.inner_text().strip() if goals_el else None
+                goals = goals if goals != "" else 0
 
                 assists_el = row.query_selector(f"td:nth-child({10+counter})")
                 assists = assists_el.inner_text().strip() if assists_el else None
+                assists = assists if assists != "" else 0
 
                 yellow_el = row.query_selector(f"td:nth-child({11 + counter})")
                 yellow = False
@@ -106,7 +109,8 @@ def scrape_player_match_stats(profile_url):
                     "assists": assists,
                     "yellow": yellow,
                     "second_yellow": second_yellow,
-                    "red": red
+                    "red": red,
+                    "rating": 0.0 # TO BE REMOVED ONCE GETTING SCORE FROM DIRETTA
                 })
 
             except Exception:
