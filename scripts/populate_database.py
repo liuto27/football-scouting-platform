@@ -12,7 +12,6 @@ def get_or_create_team(db, id):
 
 
 def get_or_create_match(db, match_info, league_id):
-
     existing = db.query(Match).filter(Match.match_url == match_info["match_url"]).first()
     if existing:
         return existing.id
@@ -75,7 +74,6 @@ def populate_database():
     db.commit()
     print(f"Inserted {inserted_teams} teams")
 
-
     # 3. Scrape players
     print("\nScraping players...")
     all_players = []
@@ -103,7 +101,6 @@ def populate_database():
                 all_players.append(player)
     db.commit()
     print(f"Inserted {inserted_players} players")
-
 
     # 4. Scrape player match stats and collect match URLs
     print("\nScraping player match stats...")
@@ -141,9 +138,38 @@ def populate_database():
 
     # 5. Scrape match details and insert matches
     print("\nScraping match details...")
+
+    # Preload existing match URLs to avoid per-row queries
+    existing_matches = {
+        m.match_url for m in db.query(Match.match_url).all()
+    }
+
+    new_matches = 0
+
     for url in match_urls:
+        if url in existing_matches:
+            continue  # already in DB
+
         match_info = scrape_match_details(url)
-        get_or_create_match(db, match_info, league.id)
+
+        match = Match(
+            id=match_info["id"],
+            date=match_info["date"],
+            league_id=league.id,
+            home_team_id=match_info["home_team_id"],
+            away_team_id=match_info["away_team_id"],
+            home_team_name=match_info["home_team_name"],
+            away_team_name=match_info["away_team_name"],
+            home_goals=match_info["home_goals"],
+            away_goals=match_info["away_goals"],
+            match_url=match_info["match_url"]
+        )
+        db.add(match)
+        new_matches += 1
+        print(f"#{new_matches} match added: {match_info['home_team_name']} vs. {match_info['away_team_name']}")
+
+    db.commit()
+    print(f"\nInserted {new_matches} new matches")
 
     print("\n=== Database population complete ===")
     db.close()

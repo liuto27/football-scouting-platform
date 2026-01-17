@@ -43,14 +43,14 @@ def scrape_match_details(match_url):
         # Home team
         home_team_el = page.query_selector("div.sb-team.sb-heim a:nth-child(2)")
         home_team = home_team_el.inner_text().strip() if home_team_el else None
-        home_team_url = "https://www.transfermarkt.com" + home_team_el.get_attribute("href")
-        home_team_id = extract_team_id(home_team_url)
+        home_team_url = "https://www.transfermarkt.com" + home_team_el.get_attribute("href") if home_team_el else None
+        home_team_id = extract_team_id(home_team_url) if home_team_el else None
 
         # Away team
         away_team_el = page.query_selector("div.sb-team.sb-gast a:nth-child(2)")
         away_team = away_team_el.inner_text().strip() if away_team_el else None
-        away_team_url = "https://www.transfermarkt.com" + away_team_el.get_attribute("href")
-        away_team_id = extract_team_id(away_team_url)
+        away_team_url = "https://www.transfermarkt.com" + away_team_el.get_attribute("href") if away_team_el else None
+        away_team_id = extract_team_id(away_team_url) if away_team_el else None
 
         # Score
         score_el = page.query_selector(".sb-endstand")
@@ -69,8 +69,8 @@ def scrape_match_details(match_url):
         # Competition
         comp_el = page.query_selector(".direct-headline a")
         league = comp_el.inner_text().strip() if comp_el else None
-        league_url = "https://www.transfermarkt.com" + comp_el.get_attribute("href")
-        league_id = extract_league_id(league_url)
+        league_url = "https://www.transfermarkt.com" + comp_el.get_attribute("href") if comp_el else None
+        league_id = extract_league_id(league_url) if comp_el else None
 
         match_data = {
             "id": match_id,
