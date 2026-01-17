@@ -59,6 +59,7 @@ class Match(Base):
     home_goals = Column(Integer)
     away_goals = Column(Integer)
     match_url = Column(String, unique=True)
+    diretta_url = Column(String, nullable=True)  # <-- NEW
 
     league = relationship("League")
     home_team = relationship("Team", foreign_keys=[home_team_id])

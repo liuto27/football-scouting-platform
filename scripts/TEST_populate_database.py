@@ -70,7 +70,7 @@ def populate_database():
     teams = scrape_teams_from_league(league.league_url)
 
     inserted_teams = 0
-    t = teams[0]
+    t = teams[0]  # TEST: only first team
     existing = db.query(Team).filter(Team.name == t["name"]).first()
     if not existing:
         team = Team(
@@ -113,7 +113,7 @@ def populate_database():
     print("\nScraping player match stats...")
     match_urls = set()
 
-    player = db.query(Player).first()
+    player = db.query(Player).first()  # only first player
     inserted_matches_per_player = 0
     stats = scrape_player_match_stats(player.player_url)
     print(f"Searching for matches played by {player.id} ({player.name})...")
