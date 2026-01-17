@@ -4,19 +4,6 @@ from scraper.transfermarkt.teams import scrape_teams_from_league
 from scraper.transfermarkt.players import scrape_players_from_team
 from scraper.transfermarkt.player_match_stats import scrape_player_match_stats
 from scraper.transfermarkt.match_details import scrape_match_details
-from datetime import datetime
-
-
-def parse_birthdate(raw):
-    if not raw:
-        return None
-    return datetime.strptime(raw, "%d/%m/%Y").date()
-
-
-def parse_match_date(raw):
-    if not raw:
-        return None
-    return datetime.strptime(raw, "%a, %d/%m/%y").date()
 
 
 def get_or_create_team(db, id):
@@ -32,7 +19,7 @@ def get_or_create_match(db, match_info, league_id):
 
     match = Match(
         id=match_info["id"],
-        date=parse_match_date(match_info["date"]),
+        date=match_info["date"],
         league_id=league_id,
         home_team_id=get_or_create_team(db, match_info["home_team_id"]),
         away_team_id=get_or_create_team(db, match_info["away_team_id"]),
@@ -98,7 +85,7 @@ def populate_database():
                     id=p["id"],
                     name=p["name"],
                     player_url=p["player_url"],
-                    birthdate=parse_birthdate(p["birthdate"]),
+                    birthdate=p["birthdate"],
                     nationality=p["nationality"],
                     position=p["position"]
                 )

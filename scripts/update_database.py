@@ -27,10 +27,11 @@ def update_database():
 
     for team in teams:
         print(f"\nChecking new matches for {team.name}...")
-        matches = scrape_players_from_team(team.team_url)  # returns players, not matches
+        players = scrape_players_from_team(team.team_url)
         # Correction: we need a match list scraper
         # For MVP, use player stats to discover new matches
 
+        """
         # 2. For each player in this team, scrape match stats
         players = (
             db.query(Player)
@@ -39,32 +40,34 @@ def update_database():
             .distinct()
             .all()
         )
+        """
 
         for player in players:
-            stats = scrape_player_match_stats(player.player_url)
+            stats = scrape_player_match_stats(player["player_url"])
 
             for s in stats:
-                match_date = s["date"]
+                match_data = scrape_match_details(s["match_url"])
+                match_date = match_data["date"]
                 if match_date <= latest_date:
                     continue  # old match, skip
 
                 # Insert match if new
                 existing_match = (
                     db.query(Match)
-                    .filter(Match.match_url == s["match_url"])
+                    .filter(Match.id == s["match_id"])
                     .first()
                 )
 
                 if not existing_match:
                     match_info = scrape_match_details(s["match_url"])
                     match = Match(
-                        id=match_info["match_id"],
+                        id=match_info["id"],
                         date=match_info["date"],
                         league_id=team.league_id,
                         home_team_id=match_info["home_team_id"],
                         away_team_id=match_info["away_team_id"],
-                        home_team_name=match_info["home_team"],
-                        away_team_name=match_info["away_team"],
+                        home_team_name=match_info["home_team_name"],
+                        away_team_name=match_info["away_team_name"],
                         home_goals=match_info["home_goals"],
                         away_goals=match_info["away_goals"],
                         match_url=match_info["match_url"]
@@ -78,7 +81,7 @@ def update_database():
                 pms = (
                     db.query(PlayerMatchStats)
                     .filter(
-                        PlayerMatchStats.player_id == player.id,
+                        PlayerMatchStats.player_id == player["id"],
                         PlayerMatchStats.match_id == s["match_id"]
                     )
                     .first()
@@ -86,7 +89,7 @@ def update_database():
 
                 if not pms:
                     new_pms = PlayerMatchStats(
-                        player_id=player.id,
+                        player_id=player["id"],
                         match_id=s["match_id"],
                         team_id=s["team_id"],
                         minutes=s["minutes"],

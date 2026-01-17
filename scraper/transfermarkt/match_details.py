@@ -1,6 +1,8 @@
 from scraper.playwright_driver import get_browser
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 import re
+from datetime import datetime
+
 
 def extract_match_id(match_url):
     # Transfermarkt match URLs contain /spielbericht/index/spielbericht/{id}
@@ -16,6 +18,12 @@ def extract_team_id(team_url):
 def extract_league_id(league_url):
     league = re.search(r"/wettbewerb/(\d+)", league_url)
     return league.group(1) if league else None
+
+
+def parse_match_date(raw):
+    if not raw:
+        return None
+    return datetime.strptime(raw, "%a, %d/%m/%y").date()
 
 
 def scrape_match_details(match_url):
@@ -66,7 +74,7 @@ def scrape_match_details(match_url):
 
         match_data = {
             "id": match_id,
-            "date": date,
+            "date": parse_match_date(date),
             "home_team_name": home_team,
             "away_team_name": away_team,
             "home_team_id": home_team_id,

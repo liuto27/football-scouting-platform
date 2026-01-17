@@ -1,11 +1,18 @@
 from scraper.playwright_driver import get_browser
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 import re
+from datetime import datetime
 
 
 def extract_player_id(profile_url):
     match = re.search(r"/spieler/(\d+)", profile_url)
     return match.group(1) if match else None
+
+
+def parse_birthdate(raw):
+    if not raw:
+        return None
+    return datetime.strptime(raw, "%d/%m/%Y").date()
 
 
 def scrape_players_from_team(team_url):
@@ -51,7 +58,7 @@ def scrape_players_from_team(team_url):
                     "player_url": player_url,
                     "position": position,
                     "nationality": nationality,
-                    "birthdate": birthdate
+                    "birthdate": parse_birthdate(birthdate)
                 })
 
             except Exception:
