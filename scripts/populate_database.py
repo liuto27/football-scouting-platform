@@ -6,33 +6,6 @@ from scraper.transfermarkt.player_match_stats import scrape_player_match_stats
 from scraper.transfermarkt.match_details import scrape_match_details
 
 
-def get_or_create_team(db, id):
-    team = db.query(Team).filter(Team.id == id).first()
-    return team.id if team else None
-
-
-def get_or_create_match(db, match_info, league_id):
-    existing = db.query(Match).filter(Match.match_url == match_info["match_url"]).first()
-    if existing:
-        return existing.id
-
-    match = Match(
-        id=match_info["id"],
-        date=match_info["date"],
-        league_id=league_id,
-        home_team_id=get_or_create_team(db, match_info["home_team_id"]),
-        away_team_id=get_or_create_team(db, match_info["away_team_id"]),
-        home_team_name=match_info["home_team_name"],
-        away_team_name=match_info["away_team_name"],
-        home_goals=match_info["home_goals"],
-        away_goals=match_info["away_goals"],
-        match_url=match_info["match_url"]
-    )
-    db.add(match)
-    db.commit()
-    return match.id
-
-
 def populate_database():
     db = SessionLocal()
 
