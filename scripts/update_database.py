@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 from database.db import SessionLocal
 from database.models import Match, Team, Player, PlayerMatchStats
-from scraper.transfermarkt.teams import scrape_teams_from_league
 from scraper.transfermarkt.players import scrape_players_from_team
 from scraper.transfermarkt.player_match_stats import scrape_player_match_stats
 from scraper.transfermarkt.match_details import scrape_match_details
@@ -28,28 +27,16 @@ def update_database():
     for team in teams:
         print(f"\nChecking new matches for {team.name}...")
         players = scrape_players_from_team(team.team_url)
-        # Correction: we need a match list scraper
-        # For MVP, use player stats to discover new matches
-
-        """
-        # 2. For each player in this team, scrape match stats
-        players = (
-            db.query(Player)
-            .join(PlayerMatchStats, Player.id == PlayerMatchStats.player_id)
-            .filter(PlayerMatchStats.team_id == team.id)
-            .distinct()
-            .all()
-        )
-        """
 
         for player in players:
             stats = scrape_player_match_stats(player["player_url"])
+            # 2. Sort the list in descending order (Newest to Oldest)
+            sorted_stats = sorted(stats, key=lambda x: x['match_date'], reverse=True)
 
-            for s in stats:
-                match_data = scrape_match_details(s["match_url"])
-                match_date = match_data["date"]
+            for s in sorted_stats:
+                match_date = s["match_date"]
                 if match_date <= latest_date:
-                    continue  # old match, skip
+                    break  # old match, stop
 
                 # Insert match if new
                 existing_match = (

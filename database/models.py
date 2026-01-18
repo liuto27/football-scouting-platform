@@ -74,6 +74,7 @@ class PlayerMatchStats(Base):
     player_id = Column(Integer, ForeignKey("players.id"))
     match_id = Column(Integer, ForeignKey("matches.id"))
     team_id = Column(Integer, ForeignKey("teams.id"))
+    match_date = Column(Date)
 
     minutes = Column(Integer)
     goals = Column(Integer)

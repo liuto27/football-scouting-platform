@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from scraper.playwright_driver import get_browser
 
 
@@ -15,6 +16,12 @@ def extract_match_id(match_url):
 def extract_team_id(team_url):
     team = re.search(r"/verein/(\d+)", team_url)
     return team.group(1) if team else None
+
+
+def parse_match_date(raw):
+    if not raw:
+        return None
+    return datetime.strptime(raw, "%d/%m/%y").date()
 
 
 def scrape_player_match_stats(profile_url):
@@ -45,6 +52,9 @@ def scrape_player_match_stats(profile_url):
                 if "bg_blau_20" in (row.get_attribute("class") or ""):
                     continue
 
+                date_td = row.query_selector("td:nth-child(2)")
+                date = date_td.inner_text().strip() if date_td else None
+
                 team_td = row.query_selector("td:nth-child(4) a")
                 team_url = "https://www.transfermarkt.com" + team_td.get_attribute("href")
                 team_id = extract_team_id(team_url)
@@ -58,7 +68,7 @@ def scrape_player_match_stats(profile_url):
 
                 minutes_el = row.query_selector(f"td:nth-child({14+counter})")
                 minutes = minutes_el.inner_text().strip() if minutes_el else None
-                minutes = int(re.sub("[^0-9]", "", minutes)) if len(minutes) > 0 else 0
+                minutes = int(re.sub("[^0-9]", "", minutes)) if minutes else 0
 
                 # stop if minutes is None, as the player hasn't played
                 if minutes is None:
@@ -104,6 +114,7 @@ def scrape_player_match_stats(profile_url):
                     "minutes": minutes,
                     "match_id": match_id,
                     "match_url": match_url,
+                    "match_date": parse_match_date(date),
                     "team_id": team_id,
                     "goals": goals,
                     "assists": assists,
